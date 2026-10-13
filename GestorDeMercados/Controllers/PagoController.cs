@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PagoController : Controller
     {
         private readonly IPago _pagoDAO;

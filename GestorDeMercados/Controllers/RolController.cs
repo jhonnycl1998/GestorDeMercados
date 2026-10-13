@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     // Define que es un controlador de API y establece la ruta base: api/Rol
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class RolController : Controller
     {
         private readonly IRol _rolDao;

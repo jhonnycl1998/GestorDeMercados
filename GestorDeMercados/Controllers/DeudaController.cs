@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     // Define que esta clase es un controlador de API y establece la ruta base (api/Deuda)
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DeudaController : Controller
     {
         private readonly IDeuda _deudaDao;

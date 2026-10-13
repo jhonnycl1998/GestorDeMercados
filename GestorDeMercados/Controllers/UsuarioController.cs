@@ -3,19 +3,29 @@ using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.DTO;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
+    
     public class UsuarioController : Controller
     {
         private readonly IUsuario _usuarioDao;
 
+        private readonly IConfiguration _config;
+
         // Inyección de dependencias para la gestión de credenciales y perfiles
-        public UsuarioController(IUsuario usuarioDao)
+        public UsuarioController(IUsuario usuarioDao, IConfiguration config)
         {
             _usuarioDao = usuarioDao;
+            _config = config;
         }
 
         // Obtiene la lista de todos los usuarios registrados
@@ -40,6 +50,7 @@ namespace GestorDeMercados.Controllers
         // RF-01: Registro de nuevo usuario con seguridad integrada.
         // Implementa PasswordHasher para encriptar la contraseña antes de guardarla en la BD.
         [HttpPost("saveUsuario")]
+        [Authorize(Roles = "Administrador")]
         public ActionResult SaveUsuario(Usuario usuario)
         {
             var hasher = new PasswordHasher<Usuario>();
@@ -53,6 +64,8 @@ namespace GestorDeMercados.Controllers
 
         // Actualiza la información del usuario (nombre, correo, rol, etc.)
         [HttpPut("updateUsuario")]
+        [Authorize(Roles = "Administrador")]
+
         public ActionResult UpdateUsuario(Usuario usuario)
         {
             var existente = _usuarioDao.Buscar(usuario.id);
@@ -78,6 +91,8 @@ namespace GestorDeMercados.Controllers
 
         // Elimina una cuenta de usuario del sistema
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
+
         public ActionResult DeleteUsuario(int id)
         {
             _usuarioDao.Eliminar(id);
@@ -87,9 +102,10 @@ namespace GestorDeMercados.Controllers
         // Lógica de Autenticación (Login):
         // Valida las credenciales comparando el hash de la base de datos con la clave ingresada.
         [HttpPost("login")]
+        [AllowAnonymous]
         public IActionResult Login([FromBody] LoginDTO dto)
         {
-            var user = _usuarioDao.ObtenerPorUsuario(dto.usuario);
+            var user = _usuarioDao.ObtenerPorUsuario(dto.usuario);      
 
             // Validación de existencia
             if (user == null)
@@ -107,12 +123,29 @@ namespace GestorDeMercados.Controllers
             if (resultado == PasswordVerificationResult.Failed)
                 return Unauthorized(new { mensaje = "Contraseña incorrecta" });
 
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
+                new Claim(ClaimTypes.Name, user.usuario),
+                new Claim(ClaimTypes.Role, user.Rol!.Nombre)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var token = new JwtSecurityToken(
+
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:ExpireMinutes"]!)),
+                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+
             // Retorna los datos esenciales para la sesión (Usuario y Rol)
             return Ok(new
             {
                 mensaje = "Login exitoso",
                 usuario = user.usuario,
-                rol = user.RolId
+                rol = user.Rol.Nombre,
+                token = new JwtSecurityTokenHandler().WriteToken(token)
             });
         }
     }

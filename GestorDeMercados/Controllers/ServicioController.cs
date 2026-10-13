@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     // Define el controlador para la gestión de servicios maestros
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ServicioController : Controller
     {
         private readonly IServicio _servicioDao;

@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TiendaController : Controller
     {
         private readonly ITienda _tiendaDao;

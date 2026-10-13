@@ -63,6 +63,7 @@ namespace GestorDeMercados.Repositories.DAO
         public Usuario? ObtenerPorUsuario(string usuario)
         {
             return _context.Usuarios
+                .Include(u=> u.Rol)
                 .FirstOrDefault(u => u.usuario == usuario);
         }
     }

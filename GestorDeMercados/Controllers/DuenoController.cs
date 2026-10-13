@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestorDeMercados.Controllers
 {
     // Indica que es un controlador de API y define el acceso mediante api/Dueno
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DuenoController : Controller
     {
         private readonly IDueno _duenoDao;
