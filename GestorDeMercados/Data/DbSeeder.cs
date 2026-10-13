@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using GestorDeMercados.Models;
+﻿using GestorDeMercados.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestorDeMercados.Data
 {
@@ -11,24 +12,29 @@ namespace GestorDeMercados.Data
         {
             var hasher = new PasswordHasher<Usuario>();
 
-            var rolAdmin = db.Roles.FirstOrDefault(r => r.Nombre == "Administrador")
-                ?? db.Roles.Add(new Rol { Nombre = "Administrador" }).Entity;
-            var rolDueno = db.Roles.FirstOrDefault(r => r.Nombre =="Dueño")
-                ?? db.Roles.Add(new Rol { Nombre ="Dueño"}).Entity;
+            // Roles (si existen los anteriores, los renombra)
+            var rolAdmin = db.Roles.FirstOrDefault(r => r.Nombre == "Admin")
+                           ?? db.Roles.FirstOrDefault(r => r.Nombre == "Administrador");
+            if (rolAdmin == null) rolAdmin = db.Roles.Add(new Rol { Nombre = "Admin" }).Entity;
+            else rolAdmin.Nombre = "Admin";
+
+            var rolUser = db.Roles.FirstOrDefault(r => r.Nombre == "User")
+                          ?? db.Roles.FirstOrDefault(r => r.Nombre == "Dueño");
+            if (rolUser == null) rolUser = db.Roles.Add(new Rol { Nombre = "User" }).Entity;
+            else rolUser.Nombre = "User";
+
             db.SaveChanges();
 
-            var adminNombre = config["Seed:AdminUsuario"] ?? "admin";
-            if(!db.Usuarios.Any(u=> u.usuario == adminNombre))
-            {
-                var admin = new Usuario { usuario = adminNombre, RolId = rolAdmin.Id };
-                admin.contrasenaHash = hasher.HashPassword(admin, config["Seed:AdminClave"] ?? "Admin123!");
-                db.Usuarios.Add(admin);
-            }
+            // Asociación: dueño por defecto y único Admin
+            var nombre = config["Seed:AdminUsuario"] ?? "asociacion";
+            var clave = config["Seed:AdminClave"] ?? "Admin123!";
 
-            if(!db.Duenos.Any(d=> d.ruc == RucAsociacion))
+            var asoc = db.Duenos.Include(d => d.Usuario)
+                                .FirstOrDefault(d => d.ruc == RucAsociacion);
+            if (asoc == null)
             {
-                var uAsoc = new Usuario { usuario = "asociacion", RolId = rolDueno.Id };
-                uAsoc.contrasenaHash = hasher.HashPassword(uAsoc, Guid.NewGuid().ToString());
+                var u = new Usuario { usuario = nombre, RolId = rolAdmin.Id };
+                u.contrasenaHash = hasher.HashPassword(u, clave);
 
                 db.Duenos.Add(new Dueno
                 {
@@ -37,9 +43,16 @@ namespace GestorDeMercados.Data
                     ruc = RucAsociacion,
                     fechaNacimiento = DateTime.Today,
                     direccion = "Mercado",
-                    Usuario = uAsoc
+                    Usuario = u
                 });
             }
+            else if (asoc.Usuario != null)
+            {
+                asoc.Usuario.usuario = nombre;
+                asoc.Usuario.RolId = rolAdmin.Id;
+                asoc.Usuario.contrasenaHash = hasher.HashPassword(asoc.Usuario, clave);
+            }
+
             db.SaveChanges();
         }
     }

@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using GestorDeMercados.Models;
+﻿using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GestorDeMercados.Controllers
 {
@@ -13,11 +13,13 @@ namespace GestorDeMercados.Controllers
     public class DuenoController : Controller
     {
         private readonly IDueno _duenoDao;
+        private readonly IRol _rolDao;
 
         // Uso de Inyección de Dependencias para interactuar con la capa de datos de Dueños
-        public DuenoController(IDueno duenoDao)
+        public DuenoController(IDueno duenoDao, IRol rolDao)
         {
             _duenoDao = duenoDao;
+            _rolDao = rolDao;
         }
 
         // Obtiene la lista de todos los dueños registrados en el sistema
@@ -42,17 +44,21 @@ namespace GestorDeMercados.Controllers
         // RNF-01: Registra un nuevo dueño en el sistema. 
         // Este registro es el que permite luego la "Asociación Automática" en las tiendas.
         [HttpPost("saveDueno")]
+        [Authorize(Roles = "Admin")]
         public ActionResult SaveDueno(Dueno dueno)
         {
-            if (dueno.Usuario != null)
-            {
+            if (dueno.Usuario == null)
+                return BadRequest(new { mensaje = "El dueño debe incluir un usuario." });
+            
                 var hasher = new PasswordHasher<Usuario>();
 
                 dueno.Usuario.contrasenaHash = hasher.HashPassword(
                     dueno.Usuario,
                     dueno.Usuario.contrasenaHash
+                    
                 );
-            }
+                dueno.Usuario.RolId = _rolDao.Listar().First(r => r.Nombre == "User").Id;
+            
 
             _duenoDao.Registrar(dueno);
 
@@ -61,14 +67,27 @@ namespace GestorDeMercados.Controllers
 
         // Actualiza la información personal o de contacto del dueño
         [HttpPut("updateDueno")]
+        [Authorize(Roles = "Admin")]
         public ActionResult UpdateDueno(Dueno dueno)
         {
-            _duenoDao.Actualizar(dueno);
-            return Ok(dueno);
+            var existente = _duenoDao.Buscar(dueno.Id);
+
+            if (existente == null)
+                return NotFound(new { mensaje = "El dueño no existe." });
+
+            existente.nombre = dueno.nombre;
+            existente.apellido = dueno.apellido;
+            existente.ruc = dueno.ruc;
+            existente.fechaNacimiento = dueno.fechaNacimiento;
+            existente.direccion = dueno.direccion;
+
+            _duenoDao.Actualizar(existente);
+            return Ok(existente);
         }
 
         // Elimina el registro de un dueño del sistema por su ID
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult DeleteDueno(int id)
         {
             _duenoDao.Eliminar(id);

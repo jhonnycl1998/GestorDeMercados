@@ -50,7 +50,7 @@ namespace GestorDeMercados.Controllers
         // RF-01: Registro de nuevo usuario con seguridad integrada.
         // Implementa PasswordHasher para encriptar la contraseña antes de guardarla en la BD.
         [HttpPost("saveUsuario")]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Admin")]
         public ActionResult SaveUsuario(Usuario usuario)
         {
             var hasher = new PasswordHasher<Usuario>();
@@ -64,7 +64,7 @@ namespace GestorDeMercados.Controllers
 
         // Actualiza la información del usuario (nombre, correo, rol, etc.)
         [HttpPut("updateUsuario")]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Admin")]
 
         public ActionResult UpdateUsuario(Usuario usuario)
         {
@@ -91,7 +91,7 @@ namespace GestorDeMercados.Controllers
 
         // Elimina una cuenta de usuario del sistema
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = "Admin")]
 
         public ActionResult DeleteUsuario(int id)
         {
@@ -147,6 +147,26 @@ namespace GestorDeMercados.Controllers
                 rol = user.Rol.Nombre,
                 token = new JwtSecurityTokenHandler().WriteToken(token)
             });
+        }
+        [HttpPut("cambiarContrasena")]
+        public IActionResult CambiarContrasena([FromBody] CambiarcContrasenaDTO dto)
+        {
+            var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = _usuarioDao.Buscar(id);
+
+            if (user == null)
+                return NotFound();
+
+            var hasher = new PasswordHasher<Usuario>();
+
+            if (hasher.VerifyHashedPassword(user, user.contrasenaHash, dto.contrasenaActual)
+                == PasswordVerificationResult.Failed)
+                return BadRequest(new { mensaje = "La contraseña actual es incorrecta" });
+
+            user.contrasenaHash = hasher.HashPassword(user, dto.contrasenaNueva);
+            _usuarioDao.Actualizar(user);
+
+            return Ok(new { mensaje = "Contraseña actualizada" });
         }
     }
 }
