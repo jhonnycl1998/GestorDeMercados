@@ -54,6 +54,24 @@ namespace GestorDeMercados.Data
             }
 
             db.SaveChanges();
+
+            if (!db.Tiendas.Any())
+            {
+                var asocId = db.Duenos.First(d => d.ruc == RucAsociacion).Id;
+
+                for (int i = 1; i <= 40; i++)
+                {
+                    db.Tiendas.Add(new Tienda
+                    {
+                        DuenoId = asocId,
+                        TieneDueno = true,
+                        alquiler = false,
+                        costoAlquiler = 0
+                    });
+                }
+            }
+
+            db.SaveChanges();
         }
     }
 }
