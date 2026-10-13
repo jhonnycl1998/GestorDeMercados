@@ -90,8 +90,16 @@ namespace GestorDeMercados.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult DeleteDueno(int id)
         {
-            _duenoDao.Eliminar(id);
-            return Ok(new { mensaje = "Dueño eliminado correctamente" });
+            try
+            {
+                _duenoDao.Eliminar(id);
+                return Ok(new { mensaje = "Dueño eliminado correctamente" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });                
+            }
+            
         }
     }
 }

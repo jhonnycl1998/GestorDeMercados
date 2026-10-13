@@ -2,6 +2,7 @@
 using GestorDeMercados.Data;
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestorDeMercados.Repositories.DAO
 {
@@ -48,13 +49,21 @@ namespace GestorDeMercados.Repositories.DAO
         // Elimina un registro de dueño de la base de datos
         public void Eliminar(int id)
         {
-            var dueno = _context.Duenos.Find(id);
+            var dueno = _context.Duenos.Include(d => d.Tiendas).FirstOrDefault(d => d.Id == id);
+            if (dueno == null) return;
 
-            if (dueno != null)
+            if (dueno.ruc == DbSeeder.RucAsociacion)
+                throw new Exception("No se puede eliminar a la Asociación.");
+
+            var asoc = _context.Duenos.First(d => d.ruc == DbSeeder.RucAsociacion);
+            foreach (var t in dueno.Tiendas)
             {
-                _context.Duenos.Remove(dueno);
-                _context.SaveChanges();
+                t.DuenoId = asoc.Id;
+                t.TieneDueno = false;
             }
+
+            _context.Duenos.Remove(dueno);
+            _context.SaveChanges();
         }
     }
 }

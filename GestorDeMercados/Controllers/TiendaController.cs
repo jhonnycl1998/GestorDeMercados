@@ -2,6 +2,7 @@
 using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using GestorDeMercados.Data;
 
 namespace GestorDeMercados.Controllers
 {
@@ -38,47 +39,56 @@ namespace GestorDeMercados.Controllers
         }
 
         [HttpPost("saveTienda")]
+        [Authorize(Roles ="Admin")]
         public ActionResult SaveTienda(Tienda tienda)
         {
 
             // Si el objeto enviado por Postman no tiene DuenoId (es 0 o null)
-            if (tienda.DuenoId == 0 || tienda.DuenoId == null)
+            if (!tienda.TieneDueno)
             {
-                // Obtenemos la lista de dueños y tomamos el primero disponible
-                var duenoAsignado = _duenoDao.Listar().FirstOrDefault();
+                tienda.DuenoId = _duenoDao.Listar().First(d => d.ruc == DbSeeder.RucAsociacion).Id;
+            }
+            else if (tienda.DuenoId == null || tienda.DuenoId == 0)
+            {
+                return BadRequest(new { mensaje = "Debe indicar el dueño de la tienda." });
+            }
 
-                if (duenoAsignado != null)
-                {
-                    tienda.DuenoId = duenoAsignado.Id;
-                    tienda.TieneDueno = true;
-                }
-                else
-                {
-                    // Si la tabla Dueños está vacía, no se puede asociar nada
-                    tienda.TieneDueno = false;
-                }
-            }
-            else
-            {
-                // Si el usuario ya mandó un ID de dueño específico
-                tienda.TieneDueno = true;
-            }
+            
 
             _tiendaDao.Registrar(tienda);
             return Created("", tienda);
         }
 
         [HttpPut("updateTienda")]
+        [Authorize(Roles = "Admin")]
+        
         public ActionResult UpdateTienda(Tienda tienda)
         {
             // Validamos el estado del dueño antes de actualizar
-            tienda.TieneDueno = tienda.DuenoId > 0;
+            try
+            {
+                if (!tienda.TieneDueno)
+                {
+                    tienda.DuenoId = _duenoDao.Listar().First(d => d.ruc == DbSeeder.RucAsociacion).Id;
+                }
+                else if (tienda.DuenoId == null || tienda.DuenoId == 0)
+                {
+                    return BadRequest(new { mensaje = "Debe indicar el dueño de la tienda." });
+                }
 
-            _tiendaDao.Actualizar(tienda);
-            return Ok(tienda);
+                _tiendaDao.Actualizar(tienda);
+                return Ok(tienda);
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(new {mensaje = ex.Message});
+            }
+            
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult DeleteTienda(int id)
         {
             _tiendaDao.Eliminar(id);

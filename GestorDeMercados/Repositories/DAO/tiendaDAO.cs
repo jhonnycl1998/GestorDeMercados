@@ -36,7 +36,11 @@ namespace GestorDeMercados.Repositories.DAO
         // Actualiza la información del local (ej. si cambió de dueño o de costo de alquiler)
         public void Actualizar(Tienda tienda)
         {
-            _context.Tiendas.Update(tienda);
+            var existente = _context.Tiendas.Find(tienda.Id);
+            if (existente == null)
+                throw new Exception("La tienda no existe.");
+
+            _context.Entry(existente).CurrentValues.SetValues(tienda);
             _context.SaveChanges();
         }
 

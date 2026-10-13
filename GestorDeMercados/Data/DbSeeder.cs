@@ -64,7 +64,7 @@ namespace GestorDeMercados.Data
                     db.Tiendas.Add(new Tienda
                     {
                         DuenoId = asocId,
-                        TieneDueno = true,
+                        TieneDueno = false,
                         alquiler = false,
                         costoAlquiler = 0
                     });
