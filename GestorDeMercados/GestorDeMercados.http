@@ -1,0 +1,42 @@
+@GestorDeMercados_HostAddress = http://localhost:5083
+
+### Listar usuarios
+GET {{GestorDeMercados_HostAddress}}/api/Usuario/getUsuarios
+Accept: application/json
+
+### Buscar por id
+GET {{GestorDeMercados_HostAddress}}/api/Usuario/1
+Accept: application/json
+
+### Registrar usuario
+POST {{GestorDeMercados_HostAddress}}/api/Usuario/saveUsuario
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contrasenaHash": "123456",
+  "rolId": 1
+}
+
+### Actualizar usuario
+PUT {{GestorDeMercados_HostAddress}}/api/Usuario/updateUsuario
+Content-Type: application/json
+
+{
+  "id": 1,
+  "usuario": "admin2",
+  "contrasenaHash": "",
+  "rolId": 1
+}
+
+### Eliminar usuario
+DELETE {{GestorDeMercados_HostAddress}}/api/Usuario/1
+
+### Login
+POST {{GestorDeMercados_HostAddress}}/api/Usuario/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contrasena": "123456"
+}
