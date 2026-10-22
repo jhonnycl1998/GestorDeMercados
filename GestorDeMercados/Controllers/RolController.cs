@@ -38,7 +38,7 @@ namespace GestorDeMercados.Controllers
             return Ok(rol);
         }
 
-        // RF-01: Registra un nuevo tipo de rol (ej. 'Administrador', 'Dueño')
+        // Registra un nuevo tipo de rol (ej. 'Administrador', 'Dueño')
         // Este es el primer paso antes de registrar cualquier usuario en el sistema.
         [HttpPost("saveRol")]
         public ActionResult SaveRol(Rol rol)

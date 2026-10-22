@@ -47,7 +47,7 @@ namespace GestorDeMercados.Controllers
             return Ok(usuario);
         }
 
-        // RF-01: Registro de nuevo usuario con seguridad integrada.
+        // Registro de nuevo usuario con seguridad integrada.
         // Implementa PasswordHasher para encriptar la contraseña antes de guardarla en la BD.
         [HttpPost("saveUsuario")]
         [Authorize(Roles = "Admin")]

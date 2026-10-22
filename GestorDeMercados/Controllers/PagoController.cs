@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using GestorDeMercados.Models;
+﻿using GestorDeMercados.Models;
 using GestorDeMercados.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GestorDeMercados.Controllers
 {
@@ -20,6 +21,7 @@ namespace GestorDeMercados.Controllers
 
         // Obtiene el historial completo de pagos realizados en el mercadito
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult Listar()
         {
             var lista = _pagoDAO.Listar();
@@ -50,7 +52,7 @@ namespace GestorDeMercados.Controllers
             return Ok(pago);
         }
 
-        // RF-02: Registra el pago de una deuda.
+        
         // Incluye un bloque try-catch para capturar validaciones de negocio (ej. montos que no coinciden)
         [HttpPost]
         public IActionResult Registrar([FromBody] Pago pago)
@@ -83,7 +85,7 @@ namespace GestorDeMercados.Controllers
             return Ok(new { mensaje = "Pago eliminado correctamente" });
         }
 
-        // RNF-02: Generación automática de Voucher en formato HTML.
+        
         // Este método construye una vista web dinámica usando los datos relacionados del Dueño, Tienda y Deuda.
         [HttpGet("voucher-html/{id}")]
         public IActionResult VoucherHtml(int id)
@@ -124,7 +126,24 @@ namespace GestorDeMercados.Controllers
             return Content(html, "text/html");
         }
 
-        // RF-03: Generación de reportes de pagos del día.
+        // Pagos del dueño que inició sesión (el id sale del token JWT)
+        [HttpGet("mis-pagos")]
+        public IActionResult MisPagos()
+        {
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var pagos = _pagoDAO.ListarPorUsuario(usuarioId).Select(p => new
+            {
+                p.Id,
+                p.FechaPago,
+                p.MontoPago,
+                p.DeudaId,
+                TiendaId = p.Deuda?.TiendaId,
+                ServicioNombre = p.Deuda?.Servicio?.Nombre
+            });
+            return Ok(pagos);
+        }
+
+        
         // Filtra los registros de la base de datos cuya fecha coincida con la actual.
         [HttpGet("reporte-hoy")]
         public IActionResult ReporteHoy()

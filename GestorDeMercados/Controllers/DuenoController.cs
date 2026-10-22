@@ -41,7 +41,7 @@ namespace GestorDeMercados.Controllers
             return Ok(dueno);
         }
 
-        // RNF-01: Registra un nuevo dueño en el sistema. 
+        // Registra un nuevo dueño en el sistema. 
         // Este registro es el que permite luego la "Asociación Automática" en las tiendas.
         [HttpPost("saveDueno")]
         [Authorize(Roles = "Admin")]

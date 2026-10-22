@@ -10,6 +10,8 @@ namespace GestorDeMercados.Repositories.Interfaces
         Pago RegistrarPago(Pago pago);
         bool Eliminar(int id);
         IEnumerable<Pago> ObtenerPagosDeHoy();
+        IEnumerable<Pago> ListarPorUsuario(int usuarioId);
+
 
     }
 }

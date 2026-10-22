@@ -19,7 +19,7 @@ namespace GestorDeMercados.Controllers
             _deudaDao = deudaDao;
         }
 
-        // RF-03: Obtiene el listado completo de deudas para reportes generales
+        // Obtiene el listado completo de deudas para reportes generales
         [HttpGet("getDeudas")]
         public ActionResult GetDeudas()
         {
@@ -38,7 +38,7 @@ namespace GestorDeMercados.Controllers
             return Ok(deuda);
         }
 
-        // RNF-03: Registra una nueva deuda (ej. Luz, Agua) asociada a una tienda y servicio
+        // Registra una nueva deuda (ej. Luz, Agua) asociada a una tienda y servicio
         [HttpPost("saveDeuda")]
         public ActionResult SaveDeuda(Deuda deuda)
         {
@@ -62,7 +62,7 @@ namespace GestorDeMercados.Controllers
             return Ok();
         }
 
-        // RF-02: Filtra deudas pendientes de un dueño específico para proceder con el pago
+        // Filtra deudas pendientes de un dueño específico para proceder con el pago
         [HttpGet("dueno/{duenoId}")]
         public IActionResult ObtenerPendientesPorDueno(int duenoId)
         {

@@ -36,6 +36,16 @@ namespace GestorDeMercados.Repositories.DAO
                 .Where(p => p.FechaPago.Date == DateTime.Now.Date) // Filtra por la fecha actual del servidor
                 .ToList();
         }
+        public IEnumerable<Pago> ListarPorUsuario(int usuarioId)
+        {
+            return _context.Pagos
+                .Include(p => p.Deuda)
+                    .ThenInclude(d => d!.Servicio)
+                .Where(p => p.Deuda!.Tienda!.Dueno!.UsuarioId == usuarioId)
+                .OrderByDescending(p => p.Id)
+                .ToList();
+        }
+
 
         // Obtiene un pago por ID con todos sus detalles para generar el comprobante (Voucher)
         public Pago? ObtenerPorId(int id)
